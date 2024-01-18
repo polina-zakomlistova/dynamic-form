@@ -1,0 +1,16 @@
+.Profile{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+  align-items: flex-start;
+}
+
+.field{
+  margin-bottom: 10px;
+}
+
+.error{
+  color: var(--error-color);
+  margin-bottom: 10px;
+}

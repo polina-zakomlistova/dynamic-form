@@ -1,0 +1,19 @@
+.Button {
+    cursor: pointer;
+    color: var(--primary-color);
+    border: 1.5px solid var(--secondary-color);
+    background-color: var(--inverted-secondary-color);
+    box-sizing: border-box;
+    padding: 12px 16px;
+    border-radius: 6px;
+}
+.success {
+    background-color: var(--success-color);
+}
+.disabled {
+    opacity: 0.5;
+    cursor: auto;
+}
+
+
+

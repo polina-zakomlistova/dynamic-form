@@ -1,0 +1,21 @@
+{
+  "Тестовый пример": "Test example",
+  "Перевод": "Translate",
+  "Главная страница": "Main page",
+  "Язык": "English",
+  "Короткий язык": "en",
+  "новый перевод": "новый перевод",
+  "Страница не найдена": "Page not found",
+  "Произошла непредвиденная ошибка": "Произошла непредвиденная ошибка",
+  "Обновить страницу": "Reload page",
+  "throw error": "throw error",
+  "Главная": "Main",
+  "О сайте": "About us",
+  "Переключить": "Toggle",
+  "Войти": "Log in",
+  "Выйти": "Log out",
+  "username": "username",
+  "password": "password",
+  "Форма авторизации": "Authorization form",
+  "Вы ввели неправильный пароль или логин": "Uncorrected username or password"
+}
