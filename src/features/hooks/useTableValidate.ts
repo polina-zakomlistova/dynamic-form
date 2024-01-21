@@ -4,7 +4,7 @@ import { DefaultField } from 'shared/lib/types/types';
 
 export type TableCell<T> = {
     value: T;
-    error: ValidationResult[] | null;
+    error: Record<keyof T, ValidationResult> | null;
     touched: boolean;
 };
 
@@ -22,7 +22,7 @@ export type TableValidate<T> = {
 
 export const useTableValidation = <T>(
     initialData: T[],
-    validators: Record<keyof T, Validator<T[keyof T]>[][]>,
+    getValidators: (data:T[])=>Record<keyof T, Validator<T[keyof T]>[][]>,
     onChange?: (value:T[])=>void,
 ) : TableValidate<T> => {
     const initializeTableData = (data: T[]) => data.map((item) => ({
@@ -31,7 +31,8 @@ export const useTableValidation = <T>(
         touched: false,
     }));
 
-    const [tableData, setTableData] = useState<TableCell<T>[]>(initializeTableData(initialData));
+    const [tableData, setTableData] = useState<TableCell<T>[]>(initializeTableData(initialData || []));
+    // const [validators, setValidators] = useState<Record<keyof T, Validator<T[keyof T]>[][]>>(initValidators);
 
     const getData = useCallback(() => tableData.map((item) => item.value), [tableData]);
 
@@ -43,6 +44,7 @@ export const useTableValidation = <T>(
             error: null,
             touched: false,
         });
+
         setTableData(newTableData);
     }, [tableData]);
 
@@ -54,34 +56,23 @@ export const useTableValidation = <T>(
         setTableData(newTableData);
     }, [tableData]);
 
-    const validateCell = useCallback(
-        async (
-            rowIndex: number,
-            columnName: keyof T,
-            cellData: T[keyof T],
-            sellValidators: Validator<T[keyof T]>[],
-        ) => {
-            const cellError = await validate(cellData, sellValidators);
-            return cellError;
-        },
-        [],
-    );
-
     const validateTable = useCallback(
         async () => {
             const newData = await Promise.all(tableData.map(async (row, rowIndex) => {
                 if (typeof row.value === 'object' && row.value !== null) {
                     const columns = Object.keys(row.value) as Array<keyof T>;
-
-                    const cellError = await Promise.all(columns.map(async (columnName) => {
-                        const cellData = row.value[columnName];
-                        const cellValidators = validators[columnName][rowIndex] || [];
-                        return validateCell(rowIndex, columnName, cellData, cellValidators);
-                    }));
-
+                    const cellErrors = await Promise.all(
+                        columns.map(async (columnName) => {
+                            const cellData = row.value[columnName];
+                            const validators = getValidators(getData());
+                            const cellValidators = validators[columnName][rowIndex] || [];
+                            const error = await validate(cellData, cellValidators);
+                            return [columnName, error];
+                        }),
+                    );
                     return {
                         value: row.value,
-                        error: cellError || '',
+                        error: Object.fromEntries(cellErrors) || '',
                         touched: row.touched,
                     };
                 }
@@ -90,27 +81,34 @@ export const useTableValidation = <T>(
             // @ts-ignore
             setTableData(newData);
         },
-        [tableData, validateCell, validators],
+        [tableData, getData, getValidators],
     );
 
     const handleChange = useCallback(
-         (rowIndex: number, columnName: keyof T, newValue: T[keyof T]) => {
+        async (rowIndex: number, columnName: keyof T, newValue: T[keyof T]) => {
             const newTableData = [...tableData];
             newTableData[rowIndex].value[columnName] = newValue;
             newTableData[rowIndex].touched = true;
-            validateTable();
             setTableData(newTableData);
+            await validateTable();
             onChange?.(getData());
         },
         [tableData, getData, onChange, validateTable],
     );
     const hasError = useCallback(async () => {
         await validateTable();
+
         let hasError = false;
+
         tableData.forEach((row) => {
-            const hasNonEmptyValues = row.error?.some((item) => item !== null && item !== undefined && item !== '');
-            if (hasNonEmptyValues) {
-                hasError = true;
+            if (typeof row.value === 'object' && row.value !== null) {
+                const columns = Object.keys(row.value) as Array<keyof T>;
+                columns.forEach((columnName) => {
+                    const cellError = row.error?.[columnName];
+                    if (cellError !== null && cellError !== undefined && cellError !== '') {
+                        hasError = true;
+                    }
+                });
             }
         });
         return hasError;

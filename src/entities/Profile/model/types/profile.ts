@@ -1,9 +1,9 @@
 import { Gender } from 'entities/Gender/model/gender';
 
 export interface IWorksPlace {
-    organization?: string;
-    yearStart?: number;
-    yearEnd?: number;
+    organization?: string|undefined;
+    yearStart?: number|undefined;
+    yearEnd?: number|undefined;
 }
 
 export interface IProfile {

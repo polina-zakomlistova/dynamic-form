@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "homepage": "https://polina-zakomlistova.github.io/dynamic-form",
   "scripts": {
     "start": "webpack serve --env port=3000",
     "build:prod": "webpack  --env mode=production",

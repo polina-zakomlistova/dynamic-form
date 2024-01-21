@@ -14,13 +14,7 @@ export default class Profile implements IProfileStore {
         email: undefined,
         gender: undefined,
         yearOfBirth: undefined,
-        worksPlaces: [
-            {
-                organization: '',
-                yearStart: undefined,
-                yearEnd: undefined,
-            },
-        ],
+        worksPlaces: undefined,
     };
 
     errors: string[]|null = null;

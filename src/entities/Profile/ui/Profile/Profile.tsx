@@ -113,64 +113,67 @@ export const Profile = observer((props: ProfileProps) => {
         yearOfBirth,
     );
 
-    // эти валидаторы зависят от текущих значений
-    const validatorsOrganization = [
+    // // эти валидаторы зависят от текущих значений
+    const validatorsOrganization = useCallback((): Validator<string>[] => [
         required(),
-    ];
+    ], [required]);
 
-    const validatorsYearStart = (yearOfBirth: number) => [
-        required(),
-        number(),
-        min(yearOfBirth + ageOfMajority),
-        max(currentYear),
-    ];
+    const validatorsYearStart = useCallback((): Validator<string>[] => {
+        if (!data.yearOfBirth || data.yearOfBirth === undefined) {
+            return [required()];
+        }
 
-    const validatorsYearEnd = (yearStart: number) => [
-        required(),
-        number(),
-        min(yearStart),
-        max(currentYear),
-    ];
+        return [
+            required(),
+            number(),
+            min(Number(data.yearOfBirth) + ageOfMajority),
+            max(currentYear),
+        ];
+    }, [data.yearOfBirth]);
 
-    const getValidatorsOrganization = () => {
-        const validators: Validator<string>[][] = [];
+    const validatorsYearEnd = useCallback(
+        (yearStart: number|undefined): Validator<string>[] => {
+            if (!yearStart) {
+                return [required()];
+            }
 
-        worksPlaces.forEach(() => validators.push(validatorsOrganization));
+            return [
+                required(),
+                number(),
+                min(Number(yearStart)),
+                max(currentYear),
+            ];
+        },
+        [required, number, min, max],
+    );
 
-        return validators;
-    };
+    const validatorsWorks = useCallback((dataTable: IWorksPlace[]) => {
+        if (dataTable) {
+            return {
+                organization: dataTable.map(() => validatorsOrganization()),
+                yearStart: dataTable.map(() => validatorsYearStart()),
+                yearEnd: dataTable.map((item: IWorksPlace) => validatorsYearEnd(item.yearStart)),
+            };
+        }
+        return [];
+    }, [validatorsOrganization, validatorsYearStart, validatorsYearEnd]);
 
-    const getValidatorsYearStart = () => {
-        const validators: Validator<string>[][] = [];
-
-        worksPlaces.forEach(() => {
-            if (!(isNaN(Number(data.yearOfBirth)))) {
-                validators.push(validatorsYearStart(Number(data.yearOfBirth)));
-            } else validators.push([required(), number()]);
-        });
-
-        return validators;
-    };
-
-    const getValidatorsYearEnd = () => {
-        const validators: Validator<string>[][] = [];
-
-        worksPlaces.forEach((item:IWorksPlace) => {
-            if (!(isNaN(Number(item.yearStart)))) {
-                validators.push(validatorsYearEnd(Number(item.yearStart)));
-            } else validators.push([required(), number()]);
-        });
-
-        return validators;
-    };
-
-    const validatorsWorks = {
-        organization: getValidatorsOrganization(),
-        yearStart: getValidatorsYearStart(),
-        yearEnd: getValidatorsYearEnd(),
-    };
     // @ts-ignore
     const worksValidate = useTableValidation<IWorksPlace>(worksPlaces, validatorsWorks, updateWorksPlaces);
+
+    const handleAdd = () => {
+        worksValidate.addRow(
+            {
+                organization: undefined,
+                yearEnd: undefined,
+                yearStart: undefined,
+            },
+        );
+    };
+
+    const handleDelete = (index: number) => {
+        worksValidate.deleteRow(index);
+    };
 
     // управление формой
     const form = useFormValidate<InputTextValidate, TableValidate<IWorksPlace>>({
@@ -201,7 +204,7 @@ export const Profile = observer((props: ProfileProps) => {
             <Gender className={cls.field} validator={genderValidate} />
             <YearOfBirth className={cls.field} validator={yearOfBirthValidate} />
             <Email className={cls.field} validator={emailValidate} />
-            <WorksTable validator={worksValidate} />
+            <WorksTable validator={worksValidate} addRow={handleAdd} deleteRow={handleDelete} />
             <hr />
             <Button type="submit" disabled={form.isSending}>Отправить</Button>
             <Button type="reset">Очистить</Button>

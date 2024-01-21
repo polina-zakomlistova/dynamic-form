@@ -35,11 +35,10 @@ export const EditableTableWithValidation = observer(
             row:TableCell<T>,
             columnName: keyof T,
             indexRow: number,
-            indexColumn:number,
         ): ReactNode => {
             const id: string = `${indexRow} ${columnName as string}`;
             const value:string = row.value[columnName];
-            const error:string = row.error?.[indexColumn] || '';
+            const error:string = row.error?.[columnName] || '';
             const { touched } = row;
 
             return (
@@ -77,12 +76,12 @@ export const EditableTableWithValidation = observer(
                     <tbody>
                         {data && data.map((row, indexRow) => (
                             <tr key={`${row.value}`} className={cls.tr}>
-                                {columns.map((column, indexColumn) => (
+                                {columns.map((column) => (
                                     <td
                                         className={cls.td}
                                         key={column.key as string}
                                     >
-                                        {inputElement(row, column.key, indexRow, indexColumn)}
+                                        {inputElement(row, column.key, indexRow)}
                                     </td>
                                 ))}
                                 <td>
